@@ -1,0 +1,84 @@
+#!/bin/sh
+set -eu
+
+# Rootless (Dopamine) port of the AltDaemon 1.0.1 iOS 17 fix.
+# All jailbreak-package paths live under /var/jb; user data stays at /var/mobile.
+
+TARGET="${ALTDAEMON_TARGET:-/var/jb/usr/bin/AltDaemon}"
+BACKUP_DIR="${ALTDAEMON_BACKUP_DIR:-/var/mobile/Library/AltDaemonIOS17RootlessFix}"
+BACKUP="$BACKUP_DIR/AltDaemon-1.0.1.original"
+ENTITLEMENTS="${ALTDAEMON_ENTITLEMENTS:-/var/jb/usr/share/altdaemon-ios17-rootless-fix/AltDaemon.entitlements.plist}"
+PLIST="/var/jb/Library/LaunchDaemons/com.rileytestut.altdaemon.plist"
+NOP='1f2003d5'
+OFFSET_1=81384  # 0x13DE8
+OFFSET_2=81464  # 0x13E38
+EXPECTED_1='0d670394'
+EXPECTED_2='f9660394'
+
+read4() {
+    od -An -tx1 -N4 -j "$2" "$1" 2>/dev/null | tr -d ' \n'
+}
+
+fail() {
+    echo "AltDaemon iOS 17 Rootless Fix: $*" >&2
+    exit 1
+}
+
+for t in od dd; do
+    command -v "$t" >/dev/null 2>&1 || fail "$t is required but was not found."
+done
+
+[ -f "$TARGET" ] || fail "AltDaemon was not found at $TARGET."
+[ -f "$ENTITLEMENTS" ] || fail "Entitlements file was not found at $ENTITLEMENTS."
+
+BYTES_1="$(read4 "$TARGET" "$OFFSET_1")"
+BYTES_2="$(read4 "$TARGET" "$OFFSET_2")"
+
+case "$BYTES_1:$BYTES_2" in
+    "$EXPECTED_1:$EXPECTED_2")
+        mkdir -p "$BACKUP_DIR"
+        if [ ! -f "$BACKUP" ]; then
+            cp -p "$TARGET" "$BACKUP"
+        fi
+        printf '\037\040\003\325' | dd of="$TARGET" bs=1 seek="$OFFSET_1" conv=notrunc 2>/dev/null
+        printf '\037\040\003\325' | dd of="$TARGET" bs=1 seek="$OFFSET_2" conv=notrunc 2>/dev/null
+        ;;
+    "$NOP:$NOP")
+        mkdir -p "$BACKUP_DIR"
+        if [ ! -f "$BACKUP" ] && [ -f "${TARGET}.original-backup" ]; then
+            ORIGINAL_1="$(read4 "${TARGET}.original-backup" "$OFFSET_1")"
+            ORIGINAL_2="$(read4 "${TARGET}.original-backup" "$OFFSET_2")"
+            if [ "$ORIGINAL_1:$ORIGINAL_2" = "$EXPECTED_1:$EXPECTED_2" ]; then
+                cp -p "${TARGET}.original-backup" "$BACKUP"
+                echo "AltDaemon iOS 17 Rootless Fix: imported existing manual backup."
+            fi
+        fi
+        echo "AltDaemon iOS 17 Rootless Fix: binary is already patched."
+        ;;
+    *)
+        fail "unsupported AltDaemon binary (bytes $BYTES_1 / $BYTES_2). Expected AltDaemon 1.0.1. No changes were made."
+        ;;
+esac
+
+[ "$(read4 "$TARGET" "$OFFSET_1")" = "$NOP" ] || fail "first patch verification failed."
+[ "$(read4 "$TARGET" "$OFFSET_2")" = "$NOP" ] || fail "second patch verification failed."
+
+chmod 755 "$TARGET"
+
+if [ "${ALTDAEMON_SKIP_LDID:-0}" != "1" ]; then
+    command -v ldid >/dev/null 2>&1 || fail "ldid is required but was not found."
+    ldid -S"$ENTITLEMENTS" "$TARGET" || fail "ldid signing failed."
+fi
+
+sync
+
+if [ "${ALTDAEMON_SKIP_LAUNCHCTL:-0}" != "1" ] && command -v launchctl >/dev/null 2>&1; then
+    launchctl bootout user/501/com.rileytestut.altdaemon >/dev/null 2>&1 || true
+    if [ -f "$PLIST" ]; then
+        launchctl bootstrap user/501 "$PLIST" >/dev/null 2>&1 || \
+            launchctl load "$PLIST" >/dev/null 2>&1 || true
+    fi
+fi
+
+echo "AltDaemon iOS 17 Rootless Fix: patch applied and signed. Perform a userspace reboot, then test Refresh All."
+exit 0

@@ -1,0 +1,38 @@
+AltDaemon iOS 17 Rootless Fix 1.0.1
+====================================
+
+Purpose
+-------
+Fixes the reproducible AltDaemon 1.0.1 crash on iOS 17.0-17.3.1 under a rootless
+(Dopamine) jailbreak:
+EXC_BAD_ACCESS / SIGSEGV at objc_release inside
+XPCConnectionHandler.listener(_:shouldAcceptNewConnection:).
+
+This is a rootless port of emp0ry's iOS 17 RootHide fix. The package layout has
+been remapped under /var/jb, and the RootHide-only dynamic patch loader hook has
+been removed (rootless does not use it).
+
+Changes
+-------
+The package does not distribute AltDaemon itself. It validates and patches the
+already-installed AltDaemon 1.0.1 executable at two ARM64 call sites:
+
+  file offset 0x13DE8: 0D 67 03 94 -> 1F 20 03 D5 (NOP)
+  file offset 0x13E38: F9 66 03 94 -> 1F 20 03 D5 (NOP)
+
+A backup is saved at:
+/var/mobile/Library/AltDaemonIOS17RootlessFix/AltDaemon-1.0.1.original
+
+The patched binary is re-signed with AltDaemon's required entitlements.
+Removing this package restores the backup when available.
+
+Compatibility
+-------------
+Tested concept ported from iOS 17.3.1 / Relaxin RootHide. Intended for rootless
+(Dopamine) environments with AltDaemon 1.0.1 from the alias20 repository.
+
+The patch offsets are specific to the exact AltDaemon 1.0.1 binary. If the
+rootless AltDaemon binary differs, apply-fix will refuse to patch and report an
+unsupported binary; no changes are made in that case.
+
+No warranty. Use at your own risk.

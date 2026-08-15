@@ -1,0 +1,30 @@
+#!/bin/sh
+set -eu
+
+# Rootless (Dopamine) port: restores the original AltDaemon from the backup.
+
+TARGET="${ALTDAEMON_TARGET:-/var/jb/usr/bin/AltDaemon}"
+BACKUP_DIR="${ALTDAEMON_BACKUP_DIR:-/var/mobile/Library/AltDaemonIOS17RootlessFix}"
+BACKUP="$BACKUP_DIR/AltDaemon-1.0.1.original"
+PLIST="/var/jb/Library/LaunchDaemons/com.rileytestut.altdaemon.plist"
+
+if [ -f "$BACKUP" ]; then
+    cp -p "$BACKUP" "$TARGET"
+    chmod 755 "$TARGET"
+    rm -f "$BACKUP"
+    rmdir "$BACKUP_DIR" 2>/dev/null || true
+    sync
+    echo "AltDaemon iOS 17 Rootless Fix: original AltDaemon restored."
+else
+    echo "AltDaemon iOS 17 Rootless Fix: no backup found; leaving AltDaemon unchanged."
+fi
+
+if [ "${ALTDAEMON_SKIP_LAUNCHCTL:-0}" != "1" ] && command -v launchctl >/dev/null 2>&1; then
+    launchctl bootout user/501/com.rileytestut.altdaemon >/dev/null 2>&1 || true
+    if [ -f "$PLIST" ]; then
+        launchctl bootstrap user/501 "$PLIST" >/dev/null 2>&1 || \
+            launchctl load "$PLIST" >/dev/null 2>&1 || true
+    fi
+fi
+
+exit 0

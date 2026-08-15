@@ -1,0 +1,4 @@
+#!/bin/sh
+set -e
+/var/jb/usr/libexec/altdaemon-ios17-rootless-fix/apply-fix
+exit 0

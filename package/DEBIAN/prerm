@@ -1,0 +1,6 @@
+#!/bin/sh
+set -e
+if [ "$1" = "remove" ] || [ "$1" = "deconfigure" ]; then
+    /var/jb/usr/libexec/altdaemon-ios17-rootless-fix/restore-fix || true
+fi
+exit 0
