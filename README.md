@@ -41,9 +41,17 @@ Original binary backup:
 
 - iOS 17.0 through 17.3.1
 - A rootless (Dopamine) environment
-- AltDaemon 1.0.1 from the alias20 repository
+- `com.rileytestut.altdaemon` **1.0.1** (the patch targets this exact binary)
 - `ldid` (provided by the jailbreak)
 - `od` and `dd` (install `coreutils` if your environment lacks them)
+
+> **About AltDaemon Modern (1.1.x):** The dependency is `com.rileytestut.altdaemon (>= 1.0.1)`,
+> so the fix installs alongside AltDaemon Modern 1.1.2 as well. However, the two ARM64
+> NOP patches are byte-exact for AltDaemon **1.0.1** only. AltDaemon Modern 1.1.2 is a
+> different build (anisette v3 / iOS 26 support) whose bytes at `0x13DE8`/`0x13E38` do
+> **not** match, so on 1.1.2 the installer detects the mismatch and performs **no patch**
+> (it leaves AltDaemon unchanged and exits cleanly). If 1.1.2 still crashes for you, the
+> fix needs new, version-specific offsets — open an issue with your iOS version and crash log.
 
 ## Installation
 
@@ -53,7 +61,7 @@ Original binary backup:
 4. Perform a userspace reboot or respring if AltDaemon does not restart automatically.
 
 ```sh
-sudo dpkg -i ./com.amorcool.altdaemonios17rootlessfix_1.0.1_iphoneos-arm64.deb
+sudo dpkg -i ./com.amorcool.altdaemonios17rootlessfix_1.0.2_iphoneos-arm64.deb
 ```
 
 ## Building

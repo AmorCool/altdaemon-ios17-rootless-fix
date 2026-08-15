@@ -1,13 +1,15 @@
 Package: com.amorcool.altdaemonios17rootlessfix
 Name: AltDaemon iOS 17 Rootless Fix
-Version: 1.0.1
+Version: 1.0.2
 Architecture: iphoneos-arm64
 Description: Fixes AltDaemon 1.0.1 SIGSEGV in XPCConnectionHandler on iOS 17 rootless (Dopamine).
  Applies two validated ARM64 NOP patches, preserves a backup, re-signs AltDaemon,
  and resets its launchd registration. Ported from the iOS 17 RootHide fix.
+ Depends on com.rileytestut.altdaemon (>= 1.0.1). The patch targets the exact
+ AltDaemon 1.0.1 binary; on other builds it installs but performs no patch.
 Section: Utilities
 Priority: optional
 Author: AmorCool
 Maintainer: AmorCool
-Depends: com.rileytestut.altdaemon (= 1.0.1), ldid
+Depends: com.rileytestut.altdaemon (>= 1.0.1), ldid
 Tag: role::enduser

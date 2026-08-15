@@ -56,7 +56,8 @@ case "$BYTES_1:$BYTES_2" in
         echo "AltDaemon iOS 17 Rootless Fix: binary is already patched."
         ;;
     *)
-        fail "unsupported AltDaemon binary (bytes $BYTES_1 / $BYTES_2). Expected AltDaemon 1.0.1. No changes were made."
+        echo "AltDaemon iOS 17 Rootless Fix: this AltDaemon build (bytes $BYTES_1 / $BYTES_2) is not the AltDaemon 1.0.1 binary this patch targets. The iOS 17 XPC patch does not apply; leaving AltDaemon unchanged." >&2
+        exit 0
         ;;
 esac
 

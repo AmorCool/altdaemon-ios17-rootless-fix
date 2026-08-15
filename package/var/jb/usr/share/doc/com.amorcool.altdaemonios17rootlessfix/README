@@ -1,4 +1,4 @@
-AltDaemon iOS 17 Rootless Fix 1.0.1
+AltDaemon iOS 17 Rootless Fix 1.0.2
 ====================================
 
 Purpose
@@ -32,7 +32,8 @@ Tested concept ported from iOS 17.3.1 / Relaxin RootHide. Intended for rootless
 (Dopamine) environments with AltDaemon 1.0.1 from the alias20 repository.
 
 The patch offsets are specific to the exact AltDaemon 1.0.1 binary. If the
-rootless AltDaemon binary differs, apply-fix will refuse to patch and report an
-unsupported binary; no changes are made in that case.
+rootless AltDaemon binary differs (e.g. AltDaemon Modern 1.1.x), apply-fix reports
+the mismatch and performs no patch (it leaves AltDaemon unchanged and exits
+cleanly); no changes are made in that case.
 
 No warranty. Use at your own risk.
